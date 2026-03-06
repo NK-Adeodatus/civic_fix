@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Registration - CivicFix</title>
+    <link rel="icon" type="image/jpeg" href="icons/civicfix-favicon.jpg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-title">CivicFix Admin</h1>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="login.html">Citizen Login</a>
+                <a href="admin-login.html">Admin Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="form-container" style="max-width: 500px; margin: 2rem auto;">
+            <div class="hero-section">
+                <h2>Admin Registration</h2>
+                <p>Register as a local authority administrator to manage community infrastructure issues.</p>
+            </div>
+
+            <form id="admin-register-form" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="your.email@gmail.com">
+                    <small>This will be your login email for CivicFix</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="full-name">Full Name</label>
+                    <input type="text" id="full-name" name="full_name" required 
+                           placeholder="Enter your full name">
+                    <small>Your official name as district administrator</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Create a strong password">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <input type="password" id="confirm-password" name="confirm_password" required 
+                           placeholder="Confirm your password">
+                </div>
+
+                <div class="form-group">
+                    <label for="province">Province</label>
+                    <select id="province" name="province" required>
+                        <option value="">Select Province</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="district">District (Your Jurisdiction)</label>
+                    <select id="district" name="district" required>
+                        <option value="">Select District</option>
+                    </select>
+                    <small>You will manage issues from this district only</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Official Phone Number</label>
+                    <input type="tel" id="phone" name="phone" 
+                           placeholder="+1 (555) 123-4567">
+                </div>
+
+
+                <button type="submit" class="btn btn-primary" id="register-btn">
+                    Register as Admin
+                </button>
+
+                <p style="text-align: center; margin-top: 1rem;">
+                    Already have an admin account? 
+                    <a href="admin-login.html" style="color: #667eea;">Login here</a>
+                </p>
+                
+            </form>
+        </div>
+    </main>
+
+    <script src="notifications.js"></script>
+    <script src="rwanda-locations.js"></script>
+    <script src="auth.js?v=7"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Rwanda locations using LocationManager
+            const provinceSelect = document.getElementById('province');
+            const districtSelect = document.getElementById('district');
+            
+            // Populate provinces
+            const provinces = LocationManager.getProvinces();
+            provinceSelect.innerHTML = '<option value="">Select Province</option>';
+            provinces.forEach(province => {
+                const option = document.createElement('option');
+                option.value = province;
+                option.textContent = province === 'Kigali' ? 'City of Kigali' : `${province} Province`;
+                provinceSelect.appendChild(option);
+            });
+            
+            provinceSelect.addEventListener('change', function() {
+                const districts = LocationManager.getDistricts(this.value);
+                districtSelect.innerHTML = '<option value="">Select District</option>';
+                districts.forEach(district => {
+                    const option = document.createElement('option');
+                    option.value = district;
+                    option.textContent = district;
+                    districtSelect.appendChild(option);
+                });
+            });
+            
+            const registerForm = document.getElementById('admin-register-form');
+            const registerBtn = document.getElementById('register-btn');
+
+            registerForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                
+                if (password !== confirmPassword) {
+                    showError('Passwords do not match!');
+                    return;
+                }
+
+                if (password.length < 8) {
+                    showError('Password must be at least 8 characters long!');
+                    return;
+                }
+
+                registerBtn.disabled = true;
+                registerBtn.innerHTML = '<span class="loading-spinner"></span> Registering...';
+
+                try {
+                    const formData = new FormData(registerForm);
+                    const adminData = {
+                        email: formData.get('email'),
+                        full_name: formData.get('full_name'),
+                        password: formData.get('password'),
+                        province: formData.get('province'),
+                        district: formData.get('district'),
+                        phone: formData.get('phone')
+                    };
+                    
+                    console.log('Admin registration data being sent:', adminData);
+
+                    const response = await fetch(`${API_BASE_URL}/api/admin/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(adminData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showSuccess('Admin registration successful! Please wait for approval.');
+                        registerForm.reset();
+                        
+                        setTimeout(() => {
+                            window.location.href = 'admin-login.html';
+                        }, 2000);
+                    } else {
+                        showError(data.error || 'Registration failed. Please try again.');
+                    }
+
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    showError('Network error. Please check your connection and try again.');
+                } finally {
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = 'Register as Admin';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
