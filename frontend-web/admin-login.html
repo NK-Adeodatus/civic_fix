@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - CivicFix</title>
+    <link rel="icon" type="image/jpeg" href="icons/civicfix-favicon.jpg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-title">CivicFix Admin</h1>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="login.html">Citizen Login</a>
+                <a href="admin-register.html">Admin Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="form-container" style="max-width: 450px; margin: 2rem auto;">
+            <div class="hero-section">
+                <h2>Admin Login</h2>
+                <p>Access the administrative dashboard to manage community infrastructure issues.</p>
+            </div>
+
+            <form id="admin-login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Admin Email</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="admin@cityname.gov">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Enter your password">
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="login-btn">
+                    Login to Admin Dashboard
+                </button>
+
+                <p style="text-align: center; margin-top: 1rem;">
+                    Don't have an admin account? <a href="admin-register.html">Register here</a><br>
+                    <a href="role-selection.html" style="color: #666; font-size: 0.9rem;">← Choose different role</a>
+                </p>
+                
+                <p style="text-align: center; margin-top: 0.5rem;">
+                    <a href="login.html" style="color: #718096; font-size: 0.9rem;">Citizen Login</a>
+                </p>
+            </form>
+        </div>
+    </main>
+
+    <script src="notifications.js"></script>
+    <script src="auth.js?v=7"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('admin-login-form');
+            const loginBtn = document.getElementById('login-btn');
+
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
+
+                try {
+                    const formData = new FormData(loginForm);
+                    const loginData = {
+                        email: formData.get('email'),
+                        password: formData.get('password')
+                    };
+
+                    const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(loginData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        // Store admin token and info
+                        localStorage.setItem('admin_token', data.token);
+                        localStorage.setItem('admin_user', JSON.stringify(data.user));
+                        
+                        // Store full name if available (username field contains full name)
+                        if (data.user.username) {
+                            localStorage.setItem('admin_full_name', data.user.username);
+                        }
+                        
+                        showSuccess('Login successful! Redirecting to admin dashboard...');
+                        
+                        setTimeout(() => {
+                            window.location.href = 'admin-dashboard.html';
+                        }, 1500);
+                    } else {
+                        showError(data.error || 'Login failed. Please check your credentials.');
+                    }
+
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showError('Network error. Please check your connection and try again.');
+                } finally {
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Login to Admin Dashboard';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
