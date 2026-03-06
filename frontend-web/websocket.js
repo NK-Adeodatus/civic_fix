@@ -22,6 +22,106 @@ class WebSocketManager {
         //     console.error('Failed to load Socket.IO:', error);
         // });
     }
+
+    loadSocketIO() {
+        return new Promise((resolve, reject) => {
+            if (window.io) {
+                resolve();
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    connect() {
+        try {
+            // Prevent multiple connections from the same tab
+            if (this.socket && this.socket.connected) {
+                console.log('WebSocket already connected');
+                return;
+            }
+
+            this.socket = io(API_BASE_URL, {
+                transports: ['polling'],  // Use polling only - more reliable on production
+                timeout: 20000,
+                forceNew: false, // Allow connection reuse
+                query: {
+                    tabId: Date.now() + Math.random() // Unique tab identifier
+                }
+            });
+
+            this.setupEventListeners();
+        } catch (error) {
+            console.error('WebSocket connection error:', error);
+            this.scheduleReconnect();
+        }
+    }
+
+    setupEventListeners() {
+        this.socket.on('connect', () => {
+            console.log('Connected to CivicFix real-time updates');
+            this.isConnected = true;
+            this.reconnectAttempts = 0;
+            this.reconnectDelay = 1000;
+
+            // Join appropriate rooms based on user status
+            this.joinUserRooms();
+        });
+
+        this.socket.on('disconnect', () => {
+            console.log('Disconnected from real-time updates');
+            this.isConnected = false;
+            this.scheduleReconnect();
+        });
+
+        this.socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            this.isConnected = false;
+            this.scheduleReconnect();
+        });
+
+        // Real-time event handlers
+        this.socket.on('status_update', (data) => {
+            this.handleStatusUpdate(data);
+        });
+
+        this.socket.on('admin_update', (data) => {
+            this.handleAdminUpdate(data);
+        });
+
+        // Fired whenever a new issue is created
+        this.socket.on('new_issue', (data) => {
+            this.handleNewIssue(data);
+        });
+
+        this.socket.on('vote_update', (data) => {
+            this.handleVoteUpdate(data);
+        });
+
+        this.socket.on('joined_room', (data) => {
+            console.log(`Joined room: ${data.room}`);
+        });
+    }
+
+    joinUserRooms() {
+        // Citizen side: join user-specific room if authManager exists
+        if (window.authManager && typeof authManager.isAuthenticated === 'function' && authManager.isAuthenticated()) {
+            if (authManager.currentUser && authManager.currentUser.id) {
+                this.socket.emit('join_user_room', {
+                    user_id: authManager.currentUser.id
+                });
+            }
+        }
+
+        // Admin side: join admin room if admin_token is present (admin dashboard)
+        const hasAdminToken = !!localStorage.getItem('admin_token');
+        if (hasAdminToken) {
+            this.socket.emit('join_admin_room', {
                 is_admin: true
             });
         } else if (window.authManager) {
