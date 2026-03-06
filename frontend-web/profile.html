@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - CivicFix</title>
+    <link rel="icon" type="image/jpeg" href="icons/civicfix-favicon.jpg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-title">CivicFix Rwanda</h1>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="report.html">Report Issue</a>
+                <a href="profile.html" class="active">Profile</a>
+                <div class="user-info" id="user-info" style="display: none;">
+                    <span id="username"></span>
+                    <button id="logout-btn" class="logout-btn">Logout</button>
+                </div>
+                <a href="login.html" id="login-link">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="profile-container">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <div class="avatar-circle">
+                        <span id="avatar-initials">U</span>
+                    </div>
+                </div>
+                <div class="profile-info">
+                    <h2 id="profile-username">Loading...</h2>
+                    <p id="profile-location">Loading location...</p>
+                    <p class="profile-member-since">Member since: <span id="member-since">Loading...</span></p>
+                </div>
+            </div>
+
+            <!-- Profile Tabs -->
+            <div class="profile-tabs">
+                <button class="tab-btn active" onclick="showTab('personal-info')">Personal Information</button>
+                <button class="tab-btn" onclick="showTab('my-issues')">My Issues</button>
+                <button class="tab-btn" onclick="showTab('settings')">Settings</button>
+            </div>
+
+            <!-- Personal Information Tab -->
+            <div id="personal-info" class="tab-content active">
+                <div class="info-card">
+                    <h3>Personal Information</h3>
+                    <form id="profile-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-username">Username</label>
+                                <input type="text" id="edit-username" name="username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-email">Email Address</label>
+                                <input type="email" id="edit-email" name="email" readonly>
+                                <small>Email cannot be changed</small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-phone">Phone Number</label>
+                                <input type="tel" id="edit-phone" name="phone" required>
+                            </div>
+                        </div>
+
+                        <h4>Location Information</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-province">Province</label>
+                                <select id="edit-province" name="province" required>
+                                    <option value="">Select Province</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-district">District</label>
+                                <select id="edit-district" name="district" required>
+                                    <option value="">Select District</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-sector">Sector</label>
+                                <select id="edit-sector" name="sector" required>
+                                    <option value="">Select Sector</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- My Issues Tab -->
+            <div id="my-issues" class="tab-content">
+                <div class="info-card">
+                    <h3>My Submitted Issues</h3>
+                    <!-- Issue Statistics -->
+                    <div class="stats-section">
+                        <h4>Issue Statistics</h4>
+                        <div class="issues-stats">
+                            <div class="stat-card">
+                                <div class="stat-number" id="total-issues">0</div>
+                                <div class="stat-label">Total Issues</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="open-issues">0</div>
+                                <div class="stat-label">Open</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="progress-issues">0</div>
+                                <div class="stat-label">In Progress</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="resolved-issues">0</div>
+                                <div class="stat-label">Resolved</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Voting Statistics -->
+                    <div class="stats-section">
+                        <h4>Voting Activity</h4>
+                        <div class="voting-stats">
+                            <div class="stat-card">
+                                <div class="stat-number" id="votes-given">0</div>
+                                <div class="stat-label">Votes Given</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="votes-received">0</div>
+                                <div class="stat-label">Votes Received</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Timeline -->
+                    <div class="stats-section">
+                        <h4>Recent Activity</h4>
+                        <div class="activity-timeline" id="activity-timeline">
+                            <div class="loading">Loading activity...</div>
+                        </div>
+                    </div>
+
+                    <div class="issues-list" id="user-issues-list">
+                        <!-- Issues will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="info-card">
+                    <h3>Account Settings</h3>
+                    
+                    <!-- Notification Preferences -->
+                    <div class="settings-section">
+                        <h4>Notification Preferences</h4>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label>Email Notifications</label>
+                                <small>Receive email updates about your issues</small>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="email-notifications" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label>Issue Status Updates</label>
+                                <small>Get notified when your issues change status</small>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="status-notifications" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label>Vote Notifications</label>
+                                <small>Get notified when someone votes on your issues</small>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="vote-notifications" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label>Community Updates</label>
+                                <small>Receive updates about issues in your district</small>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="community-notifications">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label>Weekly Summary</label>
+                                <small>Get a weekly summary of community activity</small>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="weekly-summary">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="saveNotificationSettings()">Save Preferences</button>
+                    </div>
+
+                    <div class="setting-item">
+                        <h4>Privacy</h4>
+                        <label class="switch">
+                            <input type="checkbox" id="public-profile" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Make my profile visible to other users</span>
+                    </div>
+
+                    <div class="danger-zone">
+                        <h4>Danger Zone</h4>
+                        <p>Once you delete your account, there is no going back. Please be certain.</p>
+                        <button class="btn btn-danger" onclick="confirmDeleteAccount()">Delete Account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="notifications.js"></script>
+    <script src="auth.js?v=7"></script>
+    <script src="websocket.js"></script>
+    <script src="rwanda-locations.js"></script>
+    <script>
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Profile page loaded');
+            
+            // Wait for auth to fully initialize
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            console.log('Auth manager:', authManager);
+            console.log('Is authenticated:', authManager.isAuthenticated());
+            console.log('Current user:', authManager.currentUser);
+            console.log('Token exists:', !!authManager.token);
+            console.log('Token value:', authManager.token);
+            
+            // Try to verify authentication with backend first
+            try {
+                const verifyResponse = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+                    headers: authManager.getAuthHeaders()
+                });
+                
+                console.log('Auth verify response status:', verifyResponse.status);
+                
+                if (!verifyResponse.ok) {
+                    console.log('Backend auth verification failed');
+                    alert('Session expired. Please login again.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const verifyData = await verifyResponse.json();
+                console.log('Auth verify data:', verifyData);
+                
+            } catch (error) {
+                console.error('Error verifying authentication:', error);
+                
+                // Check if this is an "Auth session missing" error
+                if (error.message && error.message.includes('Auth session missing')) {
+                    showNotification('Your session has expired. Please login again.', 'warning');
+                } else {
+                    showNotification('Unable to verify login. Please try logging in again.', 'error');
+                }
+                
+                // Clear any remaining auth data and redirect
+                authManager.currentUser = null;
+                authManager.token = null;
+                localStorage.removeItem('supabase_token');
+                
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+
+            console.log('Authentication verified, loading profile');
+            try {
+                await loadUserProfile();
+                await loadUserIssues();
+                await loadUserStats();
+                setupLocationSelects();
+            } catch (error) {
+                console.error('Error loading profile page:', error);
+                showNotification('Error loading profile page. Please try logging in again.', 'error');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            }
+        });
+
+        async function loadUserProfile() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                    headers: authManager.getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    currentUser = await response.json();
+                    
+                    // If backend profile is incomplete, try to populate from Supabase user metadata
+                    if (authManager.currentUser && authManager.currentUser.user_metadata) {
+                        const metadata = authManager.currentUser.user_metadata;
+                        
+                        // Fill in missing fields from registration data
+                        if (!currentUser.phone && metadata.phone) currentUser.phone = metadata.phone;
+                        if (!currentUser.province && metadata.province) currentUser.province = metadata.province;
+                        if (!currentUser.district && metadata.district) currentUser.district = metadata.district;
+                        if (!currentUser.sector && metadata.sector) currentUser.sector = metadata.sector;
+                        if (!currentUser.username && metadata.username) currentUser.username = metadata.username;
+                    }
+                    
+                    displayUserProfile(currentUser);
+                    
+                    // Update navigation username with backend data
+                    const navUsername = document.getElementById('username');
+                    if (navUsername && currentUser.username) {
+                        navUsername.textContent = currentUser.username;
+                    }
+                } else {
+                    showNotification('Error loading profile', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showNotification('Error loading profile', 'error');
+            }
+        }
+
+        function displayUserProfile(user) {
+            // Update profile header
+            document.getElementById('profile-username').textContent = user.username;
+            document.getElementById('profile-location').textContent = 
+                `${user.sector}, ${user.district}, ${user.province}`;
+            
+            // Set avatar initials
+            const initials = user.username.substring(0, 2).toUpperCase();
+            document.getElementById('avatar-initials').textContent = initials;
+
+            // Format member since date
+            const memberSince = new Date(user.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('member-since').textContent = memberSince;
+
+            // Populate form fields
+            document.getElementById('edit-username').value = user.username;
+            document.getElementById('edit-email').value = user.email;
+            document.getElementById('edit-phone').value = user.phone || '';
+            
+            // Set location dropdowns
+            setTimeout(() => {
+                document.getElementById('edit-province').value = user.province;
+                populateDistrictSelect(document.getElementById('edit-district'), user.province);
+                setTimeout(() => {
+                    document.getElementById('edit-district').value = user.district;
+                    populateSectorSelect(document.getElementById('edit-sector'), user.province, user.district);
+                    setTimeout(() => {
+                        document.getElementById('edit-sector').value = user.sector;
+                    }, 100);
+                }, 100);
+            }, 100);
+        }
+
+        async function loadUserIssues() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user/issues`, {
+                    headers: authManager.getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayUserIssues(data.issues || data);
+                    updateIssuesStats(data.issues);
+                } else {
+                    showNotification('Error loading your issues', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading user issues:', error);
+                showNotification('Error loading your issues', 'error');
+            }
+        }
+
+        async function loadUserStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user/stats`, {
+                    headers: authManager.getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const stats = await response.json();
+                    displayUserStats(stats);
+                } else {
+                    console.error('Error loading user stats');
+                }
+            } catch (error) {
+                console.error('Error loading user stats:', error);
+            }
+        }
+
+        function displayUserStats(stats) {
+            // Update voting statistics
+            document.getElementById('votes-given').textContent = stats.votes_given || 0;
+            document.getElementById('votes-received').textContent = stats.votes_received || 0;
+            
+            // Update issue statistics  
+            document.getElementById('total-issues').textContent = stats.issues_submitted || 0;
+            
+            // Display recent activity
+            const activityContainer = document.getElementById('activity-timeline');
+            if (activityContainer && stats.recent_activity) {
+                if (stats.recent_activity.length === 0) {
+                    activityContainer.innerHTML = '<p>No recent activity</p>';
+                } else {
+                    activityContainer.innerHTML = stats.recent_activity.map(activity => `
+                        <div class="activity-item">
+                            <span class="activity-icon"></span>
+                            <span class="activity-text">Voted on "${activity.issue_title.substring(0, 50)}..."</span>
+                            <span class="activity-time">${new Date(activity.created_at).toLocaleDateString()}</span>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+
+        function displayUserIssues(issues) {
+            const container = document.getElementById('user-issues-list');
+            
+            if (issues.length === 0) {
+                container.innerHTML = `
+                    <div class="no-issues">
+                        <p>You haven't submitted any issues yet.</p>
+                        <a href="report.html" class="btn btn-primary">Report Your First Issue</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = issues.map(issue => `
+                <div class="issue-card">
+                    <div class="issue-header">
+                        <h4>${issue.title}</h4>
+                        <span class="status-badge status-${issue.status.toLowerCase().replace(' ', '-')}">${issue.status}</span>
+                    </div>
+                    <p class="issue-description">${issue.description}</p>
+                    ${issue.image_url ? (() => {
+                        const imageSrc = issue.image_url.startsWith('http') ? 
+                            issue.image_url : `${API_BASE_URL}${issue.image_url}`;
+                        return `
+                        <div class="issue-image-container">
+                            <img src="${imageSrc}" alt="Issue photo" class="issue-image-profile" onclick="openImageModal('${imageSrc}')">
+                        </div>
+                    `;
+                    })() : ''}
+                    <div class="issue-location">
+                        ${issue.street_address ? `<div><strong>Address:</strong> ${issue.street_address}</div>` : ''}
+                        ${issue.landmark_reference ? `<div><strong>Near:</strong> ${issue.landmark_reference}</div>` : ''}
+                    </div>
+                    <div class="issue-meta">
+                        <span class="category">${issue.category}</span>
+                        <span class="votes">${issue.vote_count} votes</span>
+                        <span class="date">${new Date(issue.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div class="issue-actions">
+                        <button class="btn-edit" onclick="editIssue(${issue.id})" title="Edit Issue">
+                            Edit
+                        </button>
+                        <button class="btn-delete" onclick="deleteIssue(${issue.id})" title="Delete Issue">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function normalizeStatus(status) {
+            if (!status) return '';
+            const s = status.toString().toLowerCase().trim();
+            // Support both "In Progress" and "in-progress" representations
+            if (s === 'in progress') return 'in-progress';
+            return s;
+        }
+
+        function updateIssuesStats(issues) {
+            if (!Array.isArray(issues)) {
+                console.warn('updateIssuesStats called with non-array:', issues);
+                return;
+            }
+
+            const total = issues.length;
+            let open = 0, inProgress = 0, resolved = 0;
+
+            issues.forEach(i => {
+                const status = normalizeStatus(i.status);
+                if (status === 'open') open++;
+                else if (status === 'in-progress') inProgress++;
+                else if (status === 'resolved') resolved++;
+            });
+
+            document.getElementById('total-issues').textContent = total;
+            document.getElementById('open-issues').textContent = open;
+            document.getElementById('progress-issues').textContent = inProgress;
+            document.getElementById('resolved-issues').textContent = resolved;
+        }
+
+        function setupLocationSelects() {
+            const provinceSelect = document.getElementById('edit-province');
+            const districtSelect = document.getElementById('edit-district');
+            const sectorSelect = document.getElementById('edit-sector');
+
+            // Populate provinces
+            populateProvinceSelect(provinceSelect);
+
+            // Handle province change
+            provinceSelect.addEventListener('change', function() {
+                populateDistrictSelect(districtSelect, this.value);
+                sectorSelect.innerHTML = '<option value="">Select Sector</option>';
+            });
+
+            // Handle district change
+            districtSelect.addEventListener('change', function() {
+                const selectedProvince = provinceSelect.value;
+                const selectedDistrict = this.value;
+                populateSectorSelect(sectorSelect, selectedProvince, selectedDistrict);
+            });
+        }
+
+        // Location management functions
+        function populateProvinceSelect(selectElement) {
+            if (!selectElement || typeof LocationManager === 'undefined') return;
+            
+            const provinces = LocationManager.getProvinces();
+            selectElement.innerHTML = '<option value="">Select Province</option>';
+            
+            provinces.forEach(province => {
+                const option = document.createElement('option');
+                option.value = province;
+                option.textContent = province === 'Kigali' ? 'City of Kigali' : `${province} Province`;
+                selectElement.appendChild(option);
+            });
+        }
+
+        function populateDistrictSelect(selectElement, province) {
+            if (!selectElement || !province || typeof LocationManager === 'undefined') {
+                selectElement.innerHTML = '<option value="">Select District</option>';
+                return;
+            }
+            
+            const districts = LocationManager.getDistricts(province);
+            selectElement.innerHTML = '<option value="">Select District</option>';
+            
+            districts.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district;
+                option.textContent = district;
+                selectElement.appendChild(option);
+            });
+        }
+
+        function populateSectorSelect(selectElement, province, district) {
+            if (!selectElement || !province || !district || typeof LocationManager === 'undefined') {
+                selectElement.innerHTML = '<option value="">Select Sector</option>';
+                return;
+            }
+            
+            const sectors = LocationManager.getSectors(province, district);
+            selectElement.innerHTML = '<option value="">Select Sector</option>';
+            
+            sectors.forEach(sector => {
+                const option = document.createElement('option');
+                option.value = sector;
+                option.textContent = sector;
+                selectElement.appendChild(option);
+            });
+        }
+
+        // Profile form submission
+        document.getElementById('profile-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const profileData = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        ...authManager.getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(profileData)
+                });
+
+                if (response.ok) {
+                    showNotification('Profile updated successfully!', 'success');
+                    await loadUserProfile(); // Reload profile
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Error updating profile', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showNotification('Error updating profile', 'error');
+            }
+        });
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function cancelEdit() {
+            if (currentUser) {
+                displayUserProfile(currentUser);
+            }
+        }
+
+        // Issue management functions
+        async function editIssue(issueId) {
+            // Redirect to report page with issue ID for editing
+            window.location.href = `report.html?edit=${issueId}`;
+        }
+
+        async function deleteIssue(issueId) {
+            if (!confirm('Are you sure you want to delete this issue? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/issues/${issueId}`, {
+                    method: 'DELETE',
+                    headers: authManager.getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    showNotification('Issue deleted successfully', 'success');
+                    // Reload the issues list
+                    await loadUserIssues();
+                } else {
+                    const errorData = await response.json();
+                    showNotification(errorData.message || 'Error deleting issue', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting issue:', error);
+                showNotification('Error deleting issue', 'error');
+            }
+        }
+
+        // Image modal functions
+        function openImageModal(imageSrc) {
+            // Create modal if it doesn't exist
+            let modal = document.getElementById('image-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'image-modal';
+                modal.className = 'image-modal';
+                modal.innerHTML = `
+                    <div class="image-modal-content">
+                        <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+                        <img id="modal-image" src="" alt="Issue photo">
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            
+            document.getElementById('modal-image').src = imageSrc;
+            modal.style.display = 'block';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('image-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('image-modal');
+            if (event.target === modal) {
+                closeImageModal();
+            }
+        }
+
+        function confirmDeleteAccount() {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                if (confirm('This will permanently delete all your data. Are you absolutely sure?')) {
+                    deleteAccount();
+                }
+            }
+        }
+
+        async function deleteAccount() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user/account`, {
+                    method: 'DELETE',
+                    headers: authManager.getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    showNotification('Account deleted successfully. Logging out...', 'success');
+                    
+                    // Clear authentication immediately
+                    authManager.currentUser = null;
+                    authManager.token = null;
+                    localStorage.removeItem('supabase_token');
+                    
+                    // Sign out from Supabase
+                    try {
+                        await supabase.auth.signOut();
+                    } catch (signOutError) {
+                        console.log('Supabase sign out error (expected after account deletion):', signOutError);
+                    }
+                    
+                    // Redirect to home page after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } else {
+                    showNotification('Error deleting account', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                showNotification('Error deleting account', 'error');
+            }
+        }
+
+        // Notification Settings Functions
+        async function saveNotificationSettings() {
+            try {
+                const settings = {
+                    email_notifications: document.getElementById('email-notifications').checked,
+                    status_notifications: document.getElementById('status-notifications').checked,
+                    vote_notifications: document.getElementById('vote-notifications').checked,
+                    community_notifications: document.getElementById('community-notifications').checked,
+                    weekly_summary: document.getElementById('weekly-summary').checked
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/user/notification-settings`, {
+                    method: 'PUT',
+                    headers: authManager.getAuthHeaders(),
+                    body: JSON.stringify(settings)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification('Notification preferences saved successfully!', 'success');
+                } else {
+                    showNotification(data.error || 'Error saving preferences', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving notification settings:', error);
+                showNotification('Error saving preferences', 'error');
+            }
+        }
+
+        async function loadNotificationSettings() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user/notification-settings`, {
+                    headers: authManager.getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const settings = await response.json();
+                    
+                    document.getElementById('email-notifications').checked = settings.email_notifications || false;
+                    document.getElementById('status-notifications').checked = settings.status_notifications || false;
+                    document.getElementById('vote-notifications').checked = settings.vote_notifications || false;
+                    document.getElementById('community-notifications').checked = settings.community_notifications || false;
+                    document.getElementById('weekly-summary').checked = settings.weekly_summary || false;
+                }
+            } catch (error) {
+                console.error('Error loading notification settings:', error);
+            }
+        }
+
+        // Load notification settings when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if (authManager.isAuthenticated()) {
+                    loadNotificationSettings();
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
+

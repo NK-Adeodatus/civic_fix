@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Role - CivicFix Rwanda</title>
+    <link rel="icon" type="image/jpeg" href="icons/civicfix-favicon.jpg">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .role-selection-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .role-selection-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .role-selection-header h1 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .role-selection-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .role-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .role-card {
+            padding: 2rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafbfc;
+        }
+
+        .role-card:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .role-card.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .role-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem auto;
+            display: block;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .citizen-icon {
+            background-image: url('icons/comunity.jpg');
+        }
+
+        .admin-icon {
+            background-image: url('icons/admin.jpg');
+        }
+
+        .role-card h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .role-card p {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .action-btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        }
+
+        .login-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .login-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        .register-btn {
+            background: #48bb78;
+            color: white;
+        }
+
+        .register-btn:hover {
+            background: #38a169;
+            transform: translateY(-1px);
+        }
+
+        .action-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .role-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-title">CivicFix Rwanda</h1>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="role-selection-container">
+            <div class="role-selection-header">
+                <h1>Choose Your Role</h1>
+                <p>Select whether you're a citizen reporting issues or a government administrator managing them.</p>
+            </div>
+
+            <div class="role-options">
+                <div class="role-card" id="citizen-role" data-role="citizen">
+                    <div class="role-icon citizen-icon"></div>
+                    <h3>Citizen</h3>
+                    <p>Report infrastructure issues in your community, track their progress, and help improve your neighborhood.</p>
+                </div>
+
+                <div class="role-card" id="admin-role" data-role="admin">
+                    <div class="role-icon admin-icon"></div>
+                    <h3>Government Administrator</h3>
+                    <p>Manage and respond to citizen reports, update issue status, and coordinate infrastructure improvements.</p>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="#" id="login-btn" class="action-btn login-btn">Login</a>
+                <a href="#" id="register-btn" class="action-btn register-btn">Register</a>
+            </div>
+
+            <div class="back-link">
+                <a href="index.html">← Back to Home</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const citizenRole = document.getElementById('citizen-role');
+            const adminRole = document.getElementById('admin-role');
+            const loginBtn = document.getElementById('login-btn');
+            const registerBtn = document.getElementById('register-btn');
+            
+            let selectedRole = null;
+
+            // Handle role selection
+            function selectRole(role) {
+                selectedRole = role;
+                
+                // Update visual selection
+                citizenRole.classList.remove('selected');
+                adminRole.classList.remove('selected');
+                
+                if (role === 'citizen') {
+                    citizenRole.classList.add('selected');
+                } else if (role === 'admin') {
+                    adminRole.classList.add('selected');
+                }
+
+                // Update button links
+                updateButtonLinks();
+            }
+
+            function updateButtonLinks() {
+                if (selectedRole === 'citizen') {
+                    loginBtn.href = 'login.html';
+                    registerBtn.href = 'register.html';
+                    loginBtn.style.opacity = '1';
+                    registerBtn.style.opacity = '1';
+                    loginBtn.style.pointerEvents = 'auto';
+                    registerBtn.style.pointerEvents = 'auto';
+                } else if (selectedRole === 'admin') {
+                    loginBtn.href = 'admin-login.html';
+                    registerBtn.href = 'admin-register.html';
+                    loginBtn.style.opacity = '1';
+                    registerBtn.style.opacity = '1';
+                    loginBtn.style.pointerEvents = 'auto';
+                    registerBtn.style.pointerEvents = 'auto';
+                } else {
+                    loginBtn.href = '#';
+                    registerBtn.href = '#';
+                    loginBtn.style.opacity = '0.5';
+                    registerBtn.style.opacity = '0.5';
+                    loginBtn.style.pointerEvents = 'none';
+                    registerBtn.style.pointerEvents = 'none';
+                }
+            }
+
+            // Event listeners
+            citizenRole.addEventListener('click', () => selectRole('citizen'));
+            adminRole.addEventListener('click', () => selectRole('admin'));
+
+            // Prevent navigation if no role selected
+            loginBtn.addEventListener('click', function(e) {
+                if (!selectedRole) {
+                    e.preventDefault();
+                    alert('Please select your role first');
+                }
+            });
+
+            registerBtn.addEventListener('click', function(e) {
+                if (!selectedRole) {
+                    e.preventDefault();
+                    alert('Please select your role first');
+                }
+            });
+
+            // Initialize with disabled buttons
+            updateButtonLinks();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Issue - CivicFix</title>
+    <link rel="icon" type="image/jpeg" href="icons/civicfix-favicon.jpg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-title">CivicFix Rwanda</h1>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="report.html" class="nav-link active">Report Issue</a>
+                <a href="admin-login.html" id="admin-link" class="nav-link admin-only" style="display: none;">Admin</a>
+                <div id="auth-links">
+                    <a href="role-selection.html" id="login-link" class="nav-link">Login</a>
+                    <a href="role-selection.html" id="register-link" class="nav-link">Register</a>
+                </div>
+                <div id="user-info" class="user-info" style="display: none;">
+                    <a href="profile.html" class="nav-link">Profile</a>
+                    <span class="welcome-text">Welcome, <span id="username"></span></span>
+                    <button id="logout-btn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="form-container">
+            <h2>Report an Infrastructure Issue</h2>
+            <p>Help improve your community by reporting problems that need attention.</p>
+
+            <form id="report-form" enctype="multipart/form-data">
+                <!-- Basic Issue Information -->
+                <div class="form-group">
+                    <label for="title">Issue Title *</label>
+                    <input type="text" id="title" name="title" placeholder="Brief description of the issue" required>
+                    <small class="required-note">* This field is required</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Detailed Description *</label>
+                    <textarea id="description" name="description" rows="4" 
+                              placeholder="Provide a detailed description of the infrastructure issue..." required></textarea>
+                    <small class="required-note">* This field is required</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Issue Category *</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select a category</option>
+                        <option value="Roads">Roads (Potholes, Cracks, Surface Issues)</option>
+                        <option value="Lighting">Street Lighting (Broken/Dim Lights)</option>
+                        <option value="Water">Water/Drainage (Flooding, Blocked Drains)</option>
+                        <option value="Parks">Parks & Recreation (Equipment, Maintenance)</option>
+                        <option value="Waste">Waste Management (Collection, Bins)</option>
+                        <option value="Other">Other Infrastructure Issues</option>
+                    </select>
+                    <small class="required-note">* This field is required</small>
+                </div>
+
+                <!-- Administrative Location System -->
+                <fieldset style="border: 1px solid #ddd; padding: 1.5rem; border-radius: 4px; margin: 1.5rem 0;">
+                    <legend style="font-weight: bold; color: #2c3e50;">Administrative Location</legend>
+                    <p style="color: #666; margin-bottom: 1rem;">Select your administrative location to help route the issue to the correct authorities.</p>
+                    
+                    <div class="form-group">
+                        <label for="report-province">Province *</label>
+                        <select id="report-province" name="province" required>
+                            <option value="">Select Province</option>
+                            <option value="Kigali">City of Kigali</option>
+                            <option value="Eastern">Eastern Province</option>
+                            <option value="Northern">Northern Province</option>
+                            <option value="Southern">Southern Province</option>
+                            <option value="Western">Western Province</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="report-district">District *</label>
+                        <select id="report-district" name="district" required>
+                            <option value="">Select District</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="sector-group" style="display: none;">
+                        <label for="report-sector">Sector</label>
+                        <select id="report-sector" name="sector">
+                            <option value="">Select Sector (Optional)</option>
+                        </select>
+                    </div>
+                </fieldset>
+
+                <!-- Multi-Method Location System -->
+                <fieldset style="border: 1px solid #ddd; padding: 1.5rem; border-radius: 4px; margin: 1.5rem 0;">
+                    <legend style="font-weight: bold; color: #2c3e50;">Detailed Location Information</legend>
+                    <p style="color: #666; margin-bottom: 1rem;">Please provide as much location detail as possible to help authorities find the issue quickly.</p>
+
+                    <!-- Address-Based Location -->
+                    <div class="form-group">
+                        <label for="street-address">Street Address or Nearest Address</label>
+                        <input type="text" id="street-address" name="street_address" 
+                               placeholder="e.g., 123 Main Street or Near 456 Oak Avenue">
+                        <small>Enter the exact address or the closest address you know.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="landmark-reference">Landmark or Intersection</label>
+                        <select id="landmark-reference" name="landmark_reference">
+                            <option value="">Select a nearby landmark</option>
+                            <optgroup label="Government Buildings">
+                                <option value="Near City Hall">Near City Hall</option>
+                                <option value="Near Post Office">Near Post Office</option>
+                                <option value="Near Police Station">Near Police Station</option>
+                                <option value="Near Fire Station">Near Fire Station</option>
+                            </optgroup>
+                            <optgroup label="Schools & Education">
+                                <option value="Near Elementary School">Near Elementary School</option>
+                                <option value="Near High School">Near High School</option>
+                                <option value="Near University">Near University</option>
+                                <option value="Near Library">Near Library</option>
+                            </optgroup>
+                            <optgroup label="Business & Shopping">
+                                <option value="Near Shopping Center">Near Shopping Center</option>
+                                <option value="Near Gas Station">Near Gas Station</option>
+                                <option value="Near Bank">Near Bank</option>
+                                <option value="Near Restaurant">Near Restaurant</option>
+                            </optgroup>
+                            <optgroup label="Transportation">
+                                <option value="Near Bus Stop">Near Bus Stop</option>
+                                <option value="Near Train Station">Near Train Station</option>
+                                <option value="Near Highway Exit">Near Highway Exit</option>
+                            </optgroup>
+                            <optgroup label="Recreation">
+                                <option value="Near Park">Near Park</option>
+                                <option value="Near Sports Complex">Near Sports Complex</option>
+                                <option value="Near Community Center">Near Community Center</option>
+                            </optgroup>
+                        </select>
+                        <small>Or describe an intersection: "Corner of 5th Street and Oak Avenue"</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="custom-landmark">Custom Landmark Reference</label>
+                        <input type="text" id="custom-landmark" 
+                               placeholder="e.g., Behind Ahmed's Grocery Store, Next to the old cinema">
+                        <small>Describe local businesses or well-known community locations.</small>
+                    </div>
+
+                    <!-- Detailed Description -->
+                    <div class="form-group">
+                        <label for="detailed-description">Detailed Location Description *</label>
+                        <textarea id="detailed-description" name="detailed_description" 
+                                  placeholder="e.g., About 50 meters north of the traffic light on Main Street, in front of the blue house with white fence, next to the large oak tree..." required></textarea>
+                        <small class="required-note">* At least one location method is required. Include distances from known points, visual landmarks, and any distinctive features nearby.</small>
+                    </div>
+                </fieldset>
+
+                <!-- Photo Upload -->
+                <div class="form-group">
+                    <label for="image">Photo Documentation</label>
+                    <div class="file-upload" id="file-upload-area">
+                        <input type="file" id="image" name="image" accept="image/*" style="display: none;">
+                        <div class="upload-text">
+                            <p><strong>Click to upload or drag and drop an image</strong></p>
+                            <p>Include street signs, building numbers, or distinctive features to help with location identification</p>
+                            <p>Supported formats: JPG, PNG, GIF (Max 16MB)</p>
+                        </div>
+                    </div>
+                    <div id="file-preview" class="file-preview"></div>
+                </div>
+
+                <button type="submit" class="btn" id="submit-btn">Submit Issue Report</button>
+            </form>
+        </div>
+    </main>
+
+    <div id="notification" class="notification" style="display: none;"></div>
+
+    <script src="notifications.js"></script>
+    <script src="auth.js?v=7"></script>
+    <script src="websocket.js"></script>
+    <script src="rwanda-locations.js"></script>
+    <script>
+        let isEditing = false;
+        let editingIssueId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we're editing an existing issue
+            const urlParams = new URLSearchParams(window.location.search);
+            const editId = urlParams.get('edit');
+            
+            if (editId) {
+                isEditing = true;
+                editingIssueId = editId;
+                loadIssueForEditing(editId);
+                document.querySelector('h2').textContent = 'Edit Infrastructure Issue';
+                document.querySelector('button[type="submit"]').textContent = 'Update Issue';
+            }
+            // Check if user is logged in
+            setTimeout(() => {
+                console.log('Checking authentication...');
+                console.log('AuthManager:', authManager);
+                console.log('Is authenticated:', authManager.isAuthenticated());
+                console.log('Current user:', authManager.currentUser);
+                console.log('Token:', authManager.token ? 'Present' : 'Missing');
+                
+                if (!authManager.isAuthenticated()) {
+                    console.log('User not authenticated, redirecting to login');
+                    showWarning('Please login to report issues.');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                    return;
+                } else {
+                    console.log('User is authenticated, proceeding...');
+                    // Initialize location management after auth check
+                    setupLocationManagement();
+                }
+            }, 1000);
+
+            const reportForm = document.getElementById('report-form');
+            const fileUploadArea = document.getElementById('file-upload-area');
+            const fileInput = document.getElementById('image');
+            const filePreview = document.getElementById('file-preview');
+            const customLandmark = document.getElementById('custom-landmark');
+            const landmarkSelect = document.getElementById('landmark-reference');
+
+            // File upload handling
+            fileUploadArea.addEventListener('click', () => fileInput.click());
+            
+            fileUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.add('dragover');
+            });
+
+            fileUploadArea.addEventListener('dragleave', () => {
+                fileUploadArea.classList.remove('dragover');
+            });
+
+            fileUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    handleFileSelect(files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            });
+
+            function handleFileSelect(file) {
+                const MAX_FILE_SIZE = 16 * 1024 * 1024; // 16MB
+                const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+                
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showNotification('❌ Invalid file type. Please select an image file (JPG, PNG, or GIF).', 'error');
+                    fileInput.value = '';
+                    filePreview.innerHTML = '';
+                    return;
+                }
+                
+                // Validate file size
+                if (file.size > MAX_FILE_SIZE) {
+                    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    showNotification(`❌ File too large (${sizeMB}MB). Maximum size is 16MB.`, 'error');
+                    fileInput.value = '';
+                    filePreview.innerHTML = '';
+                    return;
+                }
+                
+                // File is valid - show preview
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        filePreview.innerHTML = `
+                            <img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 4px;">
+                            <p>Selected: ${file.name} (${(file.size / 1024).toFixed(2)}KB)</p>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // Handle custom landmark input
+            customLandmark.addEventListener('input', function() {
+                if (this.value) {
+                    landmarkSelect.value = '';
+                }
+            });
+
+            landmarkSelect.addEventListener('change', function() {
+                if (this.value) {
+                    customLandmark.value = '';
+                }
+            });
+
+            // Form submission
+            reportForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // Wait for auth manager to initialize if needed
+                if (!authManager.initialized) {
+                    console.log('Auth manager not initialized, waiting...');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+
+                console.log('Checking authentication...');
+                console.log('Auth manager initialized:', authManager.initialized);
+                console.log('Is authenticated:', authManager.isAuthenticated());
+                
+                if (!authManager.isAuthenticated()) {
+                    showNotification('Please login to submit reports.', 'error');
+                    console.log('User not authenticated, stopping submission');
+                    return;
+                }
+
+                // Validate required fields
+                const title = document.getElementById('title').value.trim();
+                const description = document.getElementById('description').value.trim();
+                const category = document.getElementById('category').value;
+
+                if (!title || !description || !category) {
+                    showNotification('Please fill in all required fields (Title, Description, Category).', 'error');
+                    return;
+                }
+
+                const submitBtn = document.getElementById('submit-btn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+
+                try {
+                    const formData = new FormData();
+                    
+                    // Add basic fields
+                    formData.append('title', document.getElementById('title').value);
+                    formData.append('description', document.getElementById('description').value);
+                    formData.append('category', document.getElementById('category').value);
+                    
+                    // Add location fields
+                    formData.append('street_address', document.getElementById('street-address').value);
+                    
+                    // Combine landmark references
+                    const landmarkRef = landmarkSelect.value || customLandmark.value;
+                    formData.append('landmark_reference', landmarkRef);
+                    
+                    formData.append('detailed_description', document.getElementById('detailed-description').value);
+                    
+                    // Add administrative location fields
+                    formData.append('province', document.getElementById('report-province').value);
+                    formData.append('district', document.getElementById('report-district').value);
+                    formData.append('sector', document.getElementById('report-sector').value);
+                    
+                    // Add image if selected
+                    if (fileInput.files[0]) {
+                        console.log('Adding image file:', fileInput.files[0].name, 'Size:', fileInput.files[0].size);
+                        formData.append('image', fileInput.files[0]);
+                    } else {
+                        console.log('No image file selected');
+                    }
+
+                    // Determine URL and method based on editing mode
+                    const url = isEditing 
+                        ? `${API_BASE_URL}/api/issues/${editingIssueId}` 
+                        : `${API_BASE_URL}/api/issues`;
+                    const method = isEditing ? 'PUT' : 'POST';
+
+                    console.log('Submitting to URL:', url);
+                    console.log('Method:', method);
+                    console.log('Auth status:', authManager.isAuthenticated());
+                    console.log('Current user:', authManager.currentUser);
+                    console.log('Token:', authManager.token ? 'Present' : 'Missing');
+                    
+                    const headers = authManager.getAuthHeadersForFormData();
+                    console.log('Headers:', headers);
+                    
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: headers,
+                        body: formData
+                    });
+
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
+                    const responseText = await response.text();
+                    console.log('Raw response:', responseText);
+                    
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (parseError) {
+                        console.error('JSON parse error:', parseError);
+                        console.error('Response was not JSON:', responseText);
+                        throw new Error('Server returned invalid response');
+                    }
+
+                    if (response.ok) {
+                        const successMessage = isEditing 
+                            ? 'Issue updated successfully!' 
+                            : 'Issue reported successfully! Thank you for helping improve your community.';
+                        showSuccess(successMessage);
+                        reportForm.reset();
+                        filePreview.innerHTML = '';
+                        
+                        setTimeout(() => {
+                            window.location.href = isEditing ? 'profile.html' : 'index.html';
+                        }, 2000);
+                    } else {
+                        showError(data.error || 'Error submitting report. Please try again.');
+                    }
+
+                } catch (error) {
+                    console.error('Error submitting report:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        stack: error.stack
+                    });
+                    
+                    // Provide specific error messages
+                    let errorMessage = 'Error submitting report. Please check your connection and try again.';
+                    if (error.message.includes('413')) {
+                        errorMessage = '❌ File too large. Please select an image smaller than 16MB.';
+                    } else if (error.message.includes('415')) {
+                        errorMessage = '❌ Invalid file type. Please select a JPG, PNG, or GIF image.';
+                    } else if (error.message.includes('Network')) {
+                        errorMessage = '❌ Network error. Please check your internet connection.';
+                    }
+                    
+                    showError(errorMessage);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = isEditing ? 'Update Issue' : 'Submit Issue Report';
+                }
+            });
+
+            // Function to load issue for editing
+            async function loadIssueForEditing(issueId) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/issues/${issueId}`, {
+                        headers: authManager.getAuthHeaders()
+                    });
+
+                    if (response.ok) {
+                        const issue = await response.json();
+                        
+                        // Populate form fields
+                        document.getElementById('title').value = issue.title;
+                        document.getElementById('description').value = issue.description;
+                        document.getElementById('category').value = issue.category;
+                        document.getElementById('street-address').value = issue.street_address || '';
+                        document.getElementById('landmark-reference').value = issue.landmark_reference || '';
+                        document.getElementById('detailed-description').value = issue.detailed_description || '';
+                        
+                        // Show existing image if available
+                        if (issue.image_url) {
+                            const filePreview = document.getElementById('file-preview');
+                            // Use full URL for Supabase Storage images, prepend API_BASE_URL for local uploads
+                            const imageSrc = issue.image_url.startsWith('http') ? 
+                                issue.image_url : `${API_BASE_URL}${issue.image_url}`;
+                            filePreview.innerHTML = `
+                                <div class="existing-image">
+                                    <img src="${imageSrc}" alt="Current image" style="max-width: 200px; max-height: 200px; border-radius: 4px;">
+                                    <p>Current image (upload a new one to replace)</p>
+                                </div>
+                            `;
+                        }
+                        
+                    } else {
+                        showError('Error loading issue for editing');
+                        window.location.href = 'profile.html';
+                    }
+                } catch (error) {
+                    console.error('Error loading issue:', error);
+                    showError('Error loading issue for editing');
+                    window.location.href = 'profile.html';
+                }
+            }
+
+        });
+
+        // Location Management Functions
+        function setupLocationManagement() {
+            const provinceSelect = document.getElementById('report-province');
+            const districtSelect = document.getElementById('report-district');
+            const sectorSelect = document.getElementById('report-sector');
+            const sectorGroup = document.getElementById('sector-group');
+
+            if (provinceSelect) {
+                provinceSelect.addEventListener('change', function() {
+                    const selectedProvince = this.value;
+                    
+                    // Clear districts and sectors
+                    districtSelect.innerHTML = '<option value="">Select District</option>';
+                    sectorSelect.innerHTML = '<option value="">Select Sector (Optional)</option>';
+                    sectorGroup.style.display = 'none';
+
+                    if (selectedProvince) {
+                        console.log('Selected province:', selectedProvince);
+                        console.log('LocationManager available:', typeof LocationManager);
+                        const districts = LocationManager.getDistricts(selectedProvince);
+                        console.log('Districts found:', districts);
+                        districts.forEach(district => {
+                            const option = document.createElement('option');
+                            option.value = district;
+                            option.textContent = district;
+                            districtSelect.appendChild(option);
+                        });
+                    }
+                });
+            }
+
+            if (districtSelect) {
+                districtSelect.addEventListener('change', function() {
+                    const selectedProvince = provinceSelect.value;
+                    const selectedDistrict = this.value;
+                    
+                    // Clear sectors
+                    sectorSelect.innerHTML = '<option value="">Select Sector (Optional)</option>';
+
+                    if (selectedProvince && selectedDistrict) {
+                        const sectors = LocationManager.getSectors(selectedProvince, selectedDistrict);
+                        sectors.forEach(sector => {
+                            const option = document.createElement('option');
+                            option.value = sector;
+                            option.textContent = sector;
+                            sectorSelect.appendChild(option);
+                        });
+                        sectorGroup.style.display = 'block';
+                    } else {
+                        sectorGroup.style.display = 'none';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+

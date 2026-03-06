@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicFix - Report & Track Infrastructure Issues</title>
+    <link rel="icon" type="image/jpeg" href="icons/civicfix-favicon.jpg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-title">CivicFix Rwanda</h1>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="report.html" class="nav-link">Report Issue</a>
+                <a href="admin-login.html" id="admin-link" class="nav-link admin-only" style="display: none;">Admin</a>
+                <div id="auth-links">
+                    <a href="role-selection.html" id="login-link" class="nav-link">Login</a>
+                    <a href="role-selection.html" id="register-link" class="nav-link">Register</a>
+                </div>
+                <div id="user-info" class="user-info" style="display: none;">
+                    <a href="profile.html" class="nav-link">Profile</a>
+                    <span class="welcome-text">Welcome, <span id="username"></span></span>
+                    <button id="logout-btn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="hero-section">
+            <h2>Report Infrastructure Issues in Your Community</h2>
+            <p>Help improve your neighborhood by reporting potholes, broken streetlights, drainage problems, and more.</p>
+            <a href="report.html" class="cta-button">Report an Issue</a>
+        </div>
+
+        <div class="filters-section">
+            <h3>Browse Issues</h3>
+            
+            <!-- Search Bar -->
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search issues by title, description, or location..." class="search-input">
+                <button id="search-btn" class="search-btn">Search</button>
+                <button id="clear-search" class="clear-btn" style="display: none;">Clear</button>
+            </div>
+            
+            <div class="filters">
+                <select id="status-filter">
+                    <option value="">All Statuses</option>
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                </select>
+                <select id="category-filter">
+                    <option value="">All Categories</option>
+                    <option value="Roads">Roads</option>
+                    <option value="Lighting">Street Lighting</option>
+                    <option value="Water">Water/Drainage</option>
+                    <option value="Parks">Parks & Recreation</option>
+                    <option value="Waste">Waste Management</option>
+                    <option value="Other">Other</option>
+                </select>
+                <select id="province-filter">
+                    <option value="">All Provinces</option>
+                    <option value="Kigali">City of Kigali</option>
+                    <option value="Eastern">Eastern Province</option>
+                    <option value="Northern">Northern Province</option>
+                    <option value="Southern">Southern Province</option>
+                    <option value="Western">Western Province</option>
+                </select>
+                <select id="district-filter">
+                    <option value="">All Districts</option>
+                    <!-- Districts will be populated dynamically -->
+                </select>
+                <select id="sector-filter" style="display: none;">
+                    <option value="">All Sectors</option>
+                    <!-- Sectors will be populated based on district selection -->
+                </select>
+                <button id="apply-filters">Apply Filters</button>
+            </div>
+        </div>
+
+        <div class="issues-section">
+            <div id="loading" class="loading">Loading issues...</div>
+            <div id="issues-list" class="issues-grid"></div>
+            <div id="pagination" class="pagination"></div>
+        </div>
+    </main>
+
+    <div id="notification" class="notification" style="display: none;"></div>
+
+    <script src="notifications.js"></script>
+    <script src="auth.js?v=7"></script>
+    <script src="websocket.js"></script>
+    <script src="rwanda-locations.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

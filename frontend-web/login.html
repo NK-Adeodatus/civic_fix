@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CivicFix</title>
+    <link rel="icon" type="image/jpeg" href="icons/civicfix-favicon.jpg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-title">CivicFix</h1>
+            <div class="nav-links">
+                <a href="admin-login.html" id="admin-link" class="nav-link admin-only" style="display: none;">Admin</a>
+                <div id="auth-links">
+                    <a href="login.html" id="login-link" class="nav-link">Login</a>
+                    <a href="register.html" id="register-link" class="nav-link">Register</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="form-container">
+            <h2>Login to CivicFix</h2>
+            <p>Access your account to report and track infrastructure issues.</p>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn">Login</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 1rem;">
+                <p>Don't have an account? <a href="register.html">Register here</a><br>
+                    <a href="role-selection.html" style="color: #666; font-size: 0.9rem;">← Choose different role</a>
+                </p>
+                <p><a href="#" id="forgot-password">Forgot your password?</a></p>
+            </div>
+
+            <div id="forgot-password-form" style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #eee;">
+                <h3>Reset Password</h3>
+                <div class="form-group">
+                    <label for="reset-email">Email Address</label>
+                    <input type="email" id="reset-email" name="reset-email" required>
+                </div>
+                <button type="button" id="reset-password-btn" class="btn">Send Reset Email</button>
+                <button type="button" id="cancel-reset" class="btn btn-secondary" style="margin-left: 1rem;">Cancel</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="notification" class="notification" style="display: none;"></div>
+
+    <script src="auth.js?v=7"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('login-form');
+            const forgotPasswordLink = document.getElementById('forgot-password');
+            const forgotPasswordForm = document.getElementById('forgot-password-form');
+            const resetPasswordBtn = document.getElementById('reset-password-btn');
+            const cancelResetBtn = document.getElementById('cancel-reset');
+
+            // Handle login form submission
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                if (!email || !password) {
+                    showNotification('Please fill in all fields.', 'error');
+                    return;
+                }
+
+                const submitBtn = loginForm.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Logging in...';
+
+                try {
+                    const result = await authManager.signIn(email, password);
+                    if (result.success) {
+                        // Redirect to home page after successful login
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1500); // Wait 1.5 seconds to show success message
+                    }
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Login';
+                }
+            });
+
+            // Handle forgot password
+            forgotPasswordLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                forgotPasswordForm.style.display = 'block';
+                forgotPasswordLink.style.display = 'none';
+            });
+
+            cancelResetBtn.addEventListener('click', function() {
+                forgotPasswordForm.style.display = 'none';
+                forgotPasswordLink.style.display = 'inline';
+                document.getElementById('reset-email').value = '';
+            });
+
+            resetPasswordBtn.addEventListener('click', async function() {
+                const email = document.getElementById('reset-email').value;
+                
+                if (!email) {
+                    showNotification('Please enter your email address.', 'error');
+                    return;
+                }
+
+                resetPasswordBtn.disabled = true;
+                resetPasswordBtn.textContent = 'Sending...';
+
+                try {
+                    await authManager.resetPassword(email);
+                    forgotPasswordForm.style.display = 'none';
+                    forgotPasswordLink.style.display = 'inline';
+                    document.getElementById('reset-email').value = '';
+                } finally {
+                    resetPasswordBtn.disabled = false;
+                    resetPasswordBtn.textContent = 'Send Reset Email';
+                }
+            });
+
+            // Redirect if already logged in
+            setTimeout(() => {
+                if (authManager.isAuthenticated()) {
+                    window.location.href = 'index.html';
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
