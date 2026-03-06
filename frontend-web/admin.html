@@ -124,6 +124,99 @@
                 this.issues = [];
                 this.currentPage = 1;
                 this.totalPages = 1;
+                this.filters = { status: '', category: '' };
+                this.init();
+            }
+
+            async init() {
+                // Wait for auth to initialize
+                setTimeout(async () => {
+                    if (!authManager.isAuthenticated()) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+
+                    // Check if user is admin
+                    const isAdmin = await this.checkAdminStatus();
+                    if (!isAdmin) {
+                        document.getElementById('admin-access-denied').style.display = 'block';
+                        return;
+                    }
+
+                    document.getElementById('admin-content').style.display = 'block';
+                    this.setupEventListeners();
+                    this.loadDashboardData();
+                    this.loadIssues();
+                }, 1000);
+            }
+
+            async checkAdminStatus() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+                        headers: authManager.getAuthHeaders()
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.user && data.user.is_admin;
+                    }
+                    return false;
+                } catch (error) {
+                    console.error('Error checking admin status:', error);
+                    return false;
+                }
+            }
+
+            setupEventListeners() {
+                document.getElementById('admin-apply-filters').addEventListener('click', () => this.applyFilters());
+                document.getElementById('refresh-data').addEventListener('click', () => {
+                    this.loadDashboardData();
+                    this.loadIssues();
+                });
+                document.getElementById('close-modal').addEventListener('click', () => this.closeModal());
+                
+                // Filter dropdowns
+                document.getElementById('admin-status-filter').addEventListener('change', () => this.applyFilters());
+                document.getElementById('admin-category-filter').addEventListener('change', () => this.applyFilters());
+            }
+
+            async loadDashboardData() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/admin/dashboard`, {
+                        headers: authManager.getAuthHeaders()
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.updateDashboardStats(data.stats);
+                    }
+                } catch (error) {
+                    console.error('Error loading dashboard data:', error);
+                }
+            }
+
+            updateDashboardStats(stats) {
+                document.getElementById('total-issues').textContent = stats.total_issues;
+                document.getElementById('open-issues').textContent = stats.open_issues;
+                document.getElementById('in-progress-issues').textContent = stats.in_progress_issues;
+                document.getElementById('resolved-issues').textContent = stats.resolved_issues;
+            }
+
+            async loadIssues(page = 1) {
+                try {
+                    this.showLoading(true);
+                    
+                    const params = new URLSearchParams({
+                        page: page.toString(),
+                        per_page: '20'
+                    });
+
+                    if (this.filters.status) params.append('status', this.filters.status);
+                    if (this.filters.category) params.append('category', this.filters.category);
+
+                    const response = await fetch(`${API_BASE_URL}/api/admin/issues?${params}`, {
+                        headers: authManager.getAuthHeaders()
+                    });
 
                     if (response.ok) {
                         const data = await response.json();
