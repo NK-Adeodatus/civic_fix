@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - CivicFix</title>
+    <link rel="icon" type="image/jpeg" href="icons/civicfix-favicon.jpg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-title">CivicFix Admin</h1>
+            <div class="nav-links">
+                <a href="index.html">Public View</a>
+                <span id="user-info">
+                    Welcome, <span id="username"></span>
+                    <button id="logout-btn">Logout</button>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div id="admin-access-denied" style="display: none; text-align: center; padding: 3rem;">
+            <h2>Access Denied</h2>
+            <p>You need administrator privileges to access this page.</p>
+            <a href="index.html" class="btn">Return to Home</a>
+        </div>
+
+        <div id="admin-content" style="display: none;">
+            <!-- Dashboard Statistics -->
+            <section class="admin-dashboard">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-issues">0</div>
+                    <div class="stat-label">Total Issues</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="open-issues">0</div>
+                    <div class="stat-label">Open Issues</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="in-progress-issues">0</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="resolved-issues">0</div>
+                    <div class="stat-label">Resolved Issues</div>
+                </div>
+            </section>
+
+            <!-- Filters and Controls -->
+            <section style="background: white; padding: 2rem; border-radius: 8px; margin: 2rem 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h3>Issue Management</h3>
+                <div class="filters">
+                    <select id="admin-status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="Open">Open</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                    </select>
+                    <select id="admin-category-filter">
+                        <option value="">All Categories</option>
+                        <option value="Roads">Roads</option>
+                        <option value="Lighting">Street Lighting</option>
+                        <option value="Water">Water/Drainage</option>
+                        <option value="Parks">Parks & Recreation</option>
+                        <option value="Waste">Waste Management</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <button id="admin-apply-filters" class="btn">Apply Filters</button>
+                    <button id="refresh-data" class="btn btn-secondary">Refresh Data</button>
+                </div>
+            </section>
+
+            <!-- Issues Table -->
+            <section style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <div id="admin-loading" class="loading">Loading issues...</div>
+                
+                <div id="admin-issues-container" style="display: none;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Reporter</th>
+                                <th>Location</th>
+                                <th>Votes</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-issues-list">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="admin-pagination" class="pagination"></div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Issue Detail Modal -->
+    <div id="issue-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="background: white; margin: 2rem auto; padding: 2rem; border-radius: 8px; max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 id="modal-title">Issue Details</h3>
+                <button id="close-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification" style="display: none;"></div>
+
+    <script src="auth.js?v=7"></script>
+    <script src="websocket.js"></script>
+    <script>
+        
+        class AdminDashboard {
+            constructor() {
+                this.issues = [];
+                this.currentPage = 1;
+                this.totalPages = 1;
+                this.filters = { status: '', category: '' };
+                this.init();
+            }
+
+            async init() {
+                // Wait for auth to initialize
+                setTimeout(async () => {
+                    if (!authManager.isAuthenticated()) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+
+                    // Check if user is admin
+                    const isAdmin = await this.checkAdminStatus();
+                    if (!isAdmin) {
+                        document.getElementById('admin-access-denied').style.display = 'block';
+                        return;
+                    }
+
+                    document.getElementById('admin-content').style.display = 'block';
+                    this.setupEventListeners();
+                    this.loadDashboardData();
+                    this.loadIssues();
+                }, 1000);
+            }
+
+            async checkAdminStatus() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+                        headers: authManager.getAuthHeaders()
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.user && data.user.is_admin;
+                    }
+                    return false;
+                } catch (error) {
+                    console.error('Error checking admin status:', error);
+                    return false;
+                }
+            }
+
+            setupEventListeners() {
+                document.getElementById('admin-apply-filters').addEventListener('click', () => this.applyFilters());
+                document.getElementById('refresh-data').addEventListener('click', () => {
+                    this.loadDashboardData();
+                    this.loadIssues();
+                });
+                document.getElementById('close-modal').addEventListener('click', () => this.closeModal());
+                
+                // Filter dropdowns
+                document.getElementById('admin-status-filter').addEventListener('change', () => this.applyFilters());
+                document.getElementById('admin-category-filter').addEventListener('change', () => this.applyFilters());
+            }
+
+            async loadDashboardData() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/admin/dashboard`, {
+                        headers: authManager.getAuthHeaders()
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.updateDashboardStats(data.stats);
+                    }
+                } catch (error) {
+                    console.error('Error loading dashboard data:', error);
+                }
+            }
+
+            updateDashboardStats(stats) {
+                document.getElementById('total-issues').textContent = stats.total_issues;
+                document.getElementById('open-issues').textContent = stats.open_issues;
+                document.getElementById('in-progress-issues').textContent = stats.in_progress_issues;
+                document.getElementById('resolved-issues').textContent = stats.resolved_issues;
+            }
+
+            async loadIssues(page = 1) {
+                try {
+                    this.showLoading(true);
+                    
+                    const params = new URLSearchParams({
+                        page: page.toString(),
+                        per_page: '20'
+                    });
+
+                    if (this.filters.status) params.append('status', this.filters.status);
+                    if (this.filters.category) params.append('category', this.filters.category);
+
+                    const response = await fetch(`${API_BASE_URL}/api/admin/issues?${params}`, {
+                        headers: authManager.getAuthHeaders()
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.issues = data.issues;
+                        this.currentPage = data.current_page;
+                        this.totalPages = data.pages;
+                        this.displayIssues();
+                        this.updatePagination();
+                    } else {
+                        showNotification('Error loading issues', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error loading issues:', error);
+                    showNotification('Error loading issues', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            displayIssues() {
+                const tbody = document.getElementById('admin-issues-list');
+                
+                if (this.issues.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem;">No issues found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = this.issues.map(issue => this.createIssueRow(issue)).join('');
+            }
+
+            createIssueRow(issue) {
+                const statusClass = issue.status.toLowerCase().replace(' ', '-');
+                const location = this.formatLocationSummary(issue);
+                
+                return `
+                    <tr>
+                        <td>${issue.id}</td>
+                        <td>
+                            <strong>${this.escapeHtml(issue.title)}</strong>
+                            <br><small>${this.escapeHtml(issue.description.substring(0, 50))}...</small>
+                        </td>
+                        <td>${issue.category}</td>
+                        <td>
+                            <select onchange="adminDashboard.updateIssueStatus(${issue.id}, this.value)" 
+                                    class="status-select">
+                                <option value="Open" ${issue.status === 'Open' ? 'selected' : ''}>Open</option>
+                                <option value="In Progress" ${issue.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="Resolved" ${issue.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                            </select>
+                        </td>
+                        <td>${issue.reporter_username || 'Unknown'}</td>
+                        <td><small>${location}</small></td>
+                        <td>${issue.vote_count || 0}</td>
+                        <td>${this.formatDate(issue.created_at)}</td>
+                        <td>
+                            <button onclick="adminDashboard.viewIssueDetails(${issue.id})" 
+                                    class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            formatLocationSummary(issue) {
+                const parts = [];
+                if (issue.street_address) parts.push(issue.street_address);
+                if (issue.landmark_reference) parts.push(issue.landmark_reference);
+                return parts.join(', ') || 'No location specified';
+            }
+
+            async updateIssueStatus(issueId, newStatus) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/issues/${issueId}/status`, {
+                        method: 'PATCH',
+                        headers: authManager.getAuthHeaders(),
+                        body: JSON.stringify({ status: newStatus })
+                    });
+
+                    if (response.ok) {
+                        showNotification('Issue status updated successfully', 'success');
+                        this.loadDashboardData(); // Refresh stats
+                        this.loadIssues(this.currentPage); // Refresh issues
+                    } else {
+                        const data = await response.json();
+                        showNotification(data.error || 'Error updating status', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error updating issue status:', error);
+                    showNotification('Error updating status', 'error');
+                }
+            }
+
+            async viewIssueDetails(issueId) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/issues/${issueId}`, {
+                        headers: authManager.getAuthHeaders()
+                    });
+
+                    if (response.ok) {
+                        const issue = await response.json();
+                        this.showIssueModal(issue);
+                    }
+                } catch (error) {
+                    console.error('Error loading issue details:', error);
+                    showNotification('Error loading issue details', 'error');
+                }
+            }
+
+            showIssueModal(issue) {
+                const modal = document.getElementById('issue-modal');
+                const modalTitle = document.getElementById('modal-title');
+                const modalContent = document.getElementById('modal-content');
+
+                modalTitle.textContent = `Issue #${issue.id}: ${issue.title}`;
+                
+                const imageHtml = issue.image_url ? 
+                    `<img src="${API_BASE_URL}${issue.image_url}" alt="Issue photo" style="max-width: 100%; height: auto; border-radius: 4px; margin: 1rem 0;">` : '';
+
+                modalContent.innerHTML = `
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Status:</strong> <span class="status ${issue.status.toLowerCase().replace(' ', '-')}">${issue.status}</span>
+                        <strong style="margin-left: 2rem;">Category:</strong> ${issue.category}
+                        <strong style="margin-left: 2rem;">Votes:</strong> ${issue.vote_count || 0}
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Reporter:</strong> ${issue.reporter_username || 'Unknown'}
+                        <strong style="margin-left: 2rem;">Created:</strong> ${this.formatDate(issue.created_at)}
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Description:</strong>
+                        <p style="margin-top: 0.5rem;">${this.escapeHtml(issue.description)}</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Location Information:</strong>
+                        ${issue.street_address ? `<p><strong>Address:</strong> ${this.escapeHtml(issue.street_address)}</p>` : ''}
+                        ${issue.landmark_reference ? `<p><strong>Landmark:</strong> ${this.escapeHtml(issue.landmark_reference)}</p>` : ''}
+                        ${issue.detailed_description ? `<p><strong>Details:</strong> ${this.escapeHtml(issue.detailed_description)}</p>` : ''}
+                    </div>
+                    
+                    ${imageHtml}
+                `;
+
+                modal.style.display = 'block';
+            }
+
+            closeModal() {
+                document.getElementById('issue-modal').style.display = 'none';
+            }
+
+            applyFilters() {
+                this.filters.status = document.getElementById('admin-status-filter').value;
+                this.filters.category = document.getElementById('admin-category-filter').value;
+                this.currentPage = 1;
+                this.loadIssues(1);
+            }
+
+            updatePagination() {
+                const container = document.getElementById('admin-pagination');
+                if (this.totalPages <= 1) {
+                    container.innerHTML = '';
+                    return;
+                }
+
+                let html = `
+                    <button onclick="adminDashboard.goToPage(${this.currentPage - 1})" 
+                            ${this.currentPage === 1 ? 'disabled' : ''}>Previous</button>
+                `;
+
+                const start = Math.max(1, this.currentPage - 2);
+                const end = Math.min(this.totalPages, this.currentPage + 2);
+
+                for (let i = start; i <= end; i++) {
+                    html += `
+                        <button onclick="adminDashboard.goToPage(${i})" 
+                                ${i === this.currentPage ? 'class="active"' : ''}>${i}</button>
+                    `;
+                }
+
+                html += `
+                    <button onclick="adminDashboard.goToPage(${this.currentPage + 1})" 
+                            ${this.currentPage === this.totalPages ? 'disabled' : ''}>Next</button>
+                `;
+
+                container.innerHTML = html;
+            }
+
+            goToPage(page) {
+                if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+                    this.loadIssues(page);
+                }
+            }
+
+            showLoading(show) {
+                document.getElementById('admin-loading').style.display = show ? 'block' : 'none';
+                document.getElementById('admin-issues-container').style.display = show ? 'none' : 'block';
+            }
+
+            formatDate(dateString) {
+                return new Date(dateString).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize admin dashboard
+        const adminDashboard = new AdminDashboard();
+
+        // Close modal when clicking outside
+        document.getElementById('issue-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                adminDashboard.closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
+
